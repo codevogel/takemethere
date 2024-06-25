@@ -99,7 +99,7 @@ alias_is_valid() {
     local new_alias=$1
     if is_digits "$new_alias"; then
         echo "Alias '$new_alias' can not only contain numbers."
-    elif echo "$new_alias" | grep -q ":"; then
+    elif echo "$new_alias" | grep -q ":" || echo "$new_alias" | grep -q "/"; then
         echo "Alias '$new_alias' can not contain colons."
     elif grep -q "^$new_alias:" "$FILE"; then
         echo "Alias '$new_alias' is already used."
