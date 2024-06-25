@@ -77,6 +77,7 @@ Examples:
   tmt -d foo                    # Delete entry associated with alias 'foo'
 
   tmt -e                        # Edit the .takemethere file
+
   tmt -l                        # List current entries in .takemethere
 ```
 
