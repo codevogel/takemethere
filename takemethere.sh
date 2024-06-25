@@ -115,8 +115,6 @@ path_is_valid() {
     return 0
 }
 
-
-
 add_entry() {
     case $# in
         1)
@@ -169,7 +167,6 @@ change_entry() {
     echo "Entry updated:"
     echo "$line_number | $new_entry"
 }
-
 
 change() {
     case $# in
