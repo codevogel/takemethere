@@ -43,6 +43,7 @@ print_options() {
     echo "  -e, --edit          Open the ~/.takemethere file with your \$EDITOR."
     echo "                      (This is powerful for quick rearranging of entries!)"
     echo "  -l, --list          Display the current contents of the .takemethere file."
+    echo "  --examples          Display examples of how to use the script."
 }
 
 print_examples() {
@@ -73,8 +74,6 @@ print_help() {
     echo "Description: TakeMeThere simplifies navigation to frequently visited directories using user-defined aliases stored in a user defined file (default: ~/.takemethere). Quickly access directories by alias (tmt work) or sequential order (tmt 1, tmt 2, etc.). Easily manage, reorder, and edit aliases through the CLI or using your preferred text editor."
     echo ""
     print_options
-    echo ""
-    print_examples
     echo ""
     echo "Note:"
     echo "  - Line numbers and aliases are 1-indexed."
@@ -297,6 +296,9 @@ case "$option" in
         ;;
     --list|-l)
         list_entries
+        ;;
+    --examples)
+        print_examples
         ;;
     *)
         # Option was actually an argument
