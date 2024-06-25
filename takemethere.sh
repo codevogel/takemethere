@@ -211,7 +211,8 @@ change() {
 delete_all_entries() {
     local force=$2
     if [ "$force" != "-f" ]; then
-        read -p "Are you sure you want to delete all entries in $FILE? (y/n): " confirm
+        echo -n "Are you sure you want to delete all entries in $FILE? (y/n):"
+        read "Are you sure you want to delete all entries in $FILE? (y/n): " confirm
         [[ ! "$confirm" =~ ^[yY]$ ]] && echo "Aborted." && return 1
     fi
     rm "$FILE"
