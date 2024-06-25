@@ -140,7 +140,7 @@ add_entry() {
                 fi
                 echo "$_alias:$_path" >> "$FILE"
                 echo "Added entry:"
-                echo "$(wc -l < "$FILE") | $_path:$_alias"
+                echo "$(wc -l < "$FILE") | $_alias:$_path"
                 return 0
             fi
             ;;
