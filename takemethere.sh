@@ -285,6 +285,11 @@ fi
 
 # Reject invalid arg count
 if [ "$#" -lt 1 ]; then
+    if [ "$(wc -l < "$FILE")" -eq 0 ]; then
+        echo "No entries found in $FILE"
+        echo "To create your first entry, see 'tmt --help' and look at the --add option."
+        return 1
+    fi
     list_entries
     echo -n "Go to line number or alias: "
     read target
