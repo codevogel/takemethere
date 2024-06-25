@@ -97,11 +97,11 @@ is_digits() {
 alias_is_valid() {
     local new_alias=$1
     if is_digits "$new_alias"; then
-        echo "Alias $new_alias can not only contain numbers."
+        echo "Alias '$new_alias' can not only contain numbers."
     elif echo "$new_alias" | grep -q ":"; then
-        echo "Alias $new_alias can not contain colons."
+        echo "Alias '$new_alias' can not contain colons."
     elif grep -q "^$new_alias:" "$FILE"; then
-        echo "Alias $new_alias is already used."
+        echo "Alias '$new_alias' is already used."
     else
         return 0
     fi
@@ -111,7 +111,7 @@ alias_is_valid() {
 path_is_valid() {
     local _path=$1 # Avoid overwriting $path
     if [ ! -d "$_path" ]; then
-        echo "Path $_path does not exist or is not a directory."
+        echo "Path '$_path' does not exist or is not a directory."
         return 1
     fi
     return 0
@@ -162,14 +162,14 @@ change_entry() {
         local line_number=$target
         local line_count=$(wc -l < "$FILE")
         if [ $line_number -lt 0 -o $line_number -gt $line_count ]; then
-            echo "Line number $line_number does not exist."
+            echo "Line number '$line_number' does not exist."
             return 1
         fi
     else
         # Get line number of alias
         local line_number=$(grep -n "^$target:" "$FILE" | cut -d: -f1)
         if [ -z "$line_number" ]; then
-            echo "Alias $target does not exist."
+            echo "Alias '$target' does not exist."
             return 1
         fi
         local new_entry="$target:$new_entry"
@@ -241,14 +241,14 @@ delete_entry() {
         local line_number=$target
         local line_count=$(wc -l < "$FILE")
         if [ $line_number -lt 1 ]; then
-            echo "Line number must be greater than 0. (There are $line_count lines)."
+            echo "Line number '$line_number' must be greater than 0. (There are $line_count lines)."
             return 1
         elif [ $line_number -gt $line_count ]; then
-            echo "Line number $line_number is out of range (There are $line_count lines)."
+            echo "Line number '$line_number' is out of range. (There are $line_count lines)."
             return 1
         fi
         sed -i "${line_number}d" "$FILE"
-        echo "Deleted line $line_number"
+        echo "Deleted line '$line_number'"
     else
         # Delete by alias
         if grep -q "^$target:" "$FILE"; then
