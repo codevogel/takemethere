@@ -122,24 +122,34 @@ add_entry() {
         1)
             local _path=$1
             if path_is_valid $_path; then
+                if [ "$_path" = "." ]; then
+                    _path=$(pwd)
+                fi
                 echo "$_path" >> "$FILE"
+                echo "Added entry:"
+                echo "$(wc -l < "$FILE") | $_path"
                 return 0
             fi
-            return 1
             ;;
         2)
             local _alias=$1
             local _path=$2
             if alias_is_valid $_alias && path_is_valid $_path; then
+                if [ "$_path" = "." ]; then
+                    _path=$(pwd)
+                fi
                 echo "$_alias:$_path" >> "$FILE"
+                echo "Added entry:"
+                echo "$(wc -l < "$FILE") | $_path:$_alias"
                 return 0
             fi
-            return 1
+            ;;
+        *)
+            echo "Invalid number of arguments."
+            echo "Usage: tmt --add|-a [<alias>] <path>"
+            echo "See 'tmt --help' for more information."
             ;;
     esac
-    echo "Invalid number of arguments."
-    echo "Usage: tmt --add|-a [<alias>] <path>"
-    echo "See 'tmt --help' for more information."
     return 1
 }
 
@@ -171,9 +181,9 @@ change_entry() {
 }
 
 change() {
+    local target=$1
     case $# in
         2)
-            local target=$1
             local _path=$2
             if path_is_valid $_path; then
                 change_entry $target $_path
@@ -181,7 +191,6 @@ change() {
             fi
             ;;
         3)
-            local target=$1
             local _alias=$2
             local _path=$3
             if alias_is_valid $_alias && path_is_valid $_path; then
@@ -189,11 +198,13 @@ change() {
                 return 0
             fi
             ;;
+        *)
+            echo "Invalid number of arguments."
+            echo "Usage: tmt --change|-c <alias|n> [<new_alias>] <new_path>"
+            echo "See 'tmt --help' for more information."
+            return 1
+            ;;
     esac
-    echo "Invalid number of arguments."
-    echo "Usage: tmt --change|-c <alias|n> [<new_alias>] <new_path>"
-    echo "See 'tmt --help' for more information."
-    return 1
 }
 
 delete_all_entries() {
