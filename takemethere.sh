@@ -74,9 +74,10 @@ print_help() {
     cat <<EOF
 Usage: tmt [OPTIONS] [ARGUMENTS]
 
-Aliases: tmt, tkme, takemethere
-
-Description: TakeMeThere simplifies navigation to frequently visited directories using user-defined aliases stored in a user defined file (default: ~/.takemethere). Quickly access directories by alias (tmt work) or sequential order (tmt 1, tmt 2, etc.). Easily manage, reorder, and edit aliases through the CLI or using your preferred text editor.
+Description: TakeMeThere simplifies navigation to frequently visited directories using
+   user-defined aliases stored in a user defined file (default: ~/.takemethere).
+   Quickly access directories by alias (tmt work) or sequential order (tmt 1, tmt 2, etc.).
+   Easily manage, reorder, and edit aliases through the CLI or using your preferred text editor.
 
 $(print_options)
 
