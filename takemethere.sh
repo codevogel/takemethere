@@ -145,15 +145,7 @@ change_entry() {
     local target=$1
     local new_entry=$2
 
-    if ! is_digits "$target"; then
-        # Get line number of alias
-        local line_number=$(grep -n "^$target:" "$FILE" | cut -d: -f1)
-        if [ -z "$line_number" ]; then
-            echo "Alias $target does not exist."
-            return 1
-        fi
-        local new_entry="$target:$new_entry"
-    else
+    if is_digits "$target"; then
         # Change by line number
         local line_number=$target
         local line_count=$(wc -l < "$FILE")
@@ -161,6 +153,14 @@ change_entry() {
             echo "Line number $line_number does not exist."
             return 1
         fi
+    else
+        # Get line number of alias
+        local line_number=$(grep -n "^$target:" "$FILE" | cut -d: -f1)
+        if [ -z "$line_number" ]; then
+            echo "Alias $target does not exist."
+            return 1
+        fi
+        local new_entry="$target:$new_entry"
     fi
 
     sed -i "${line_number}s|.*|$new_entry|" "$FILE"
