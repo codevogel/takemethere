@@ -272,7 +272,13 @@ if [ ! -f "$FILE" ]; then
 fi
 
 # Reject invalid arg count
-if [ "$#" -lt 1 -o "$#" -gt 4 ]; then
+if [ "$#" -lt 1 ]; then
+    list_entries
+    echo -n "Go to line number or alias: "
+    read target
+    change_to_directory "$target"
+    return 0
+elif [ "$#" -gt 4 ]; then
     echo "Usage: tmt [OPTIONS] [ARGUMENTS]"
     echo ""
     print_options
