@@ -220,20 +220,35 @@ delete_all_entries() {
     return 0
 }
 
+line_nr_is_valid() {
+    if [ $line_number -lt 1 ]; then
+        echo "Line number '$line_number' must be greater than 0. (There are $line_count lines)."
+        return 1
+    elif [ $line_number -gt $line_count ]; then
+        echo "Line number '$line_number' is out of range. (There are $line_count lines)."
+        return 1
+    fi
+}
+
 change_to_directory() {
     local target=$1
     # cd to the directory
     if is_digits "$target"; then
         local line_number=$target
+        local line_count=$(wc -l < "$FILE")
+        if ! line_nr_is_valid $line_number; then
+            return 1
+        fi
         local line=$(sed -n "${line_number}p" "$FILE")
-        local _path=$(echo "$line" | cut -d: -f2)
-        cd "$_path"
     else
         local _alias=$target
         local line=$(grep "^$_alias:" "$FILE")
-        local _path=$(echo "$line" | cut -d: -f2)
-        cd "$_path"
+        if [ -z "$line" ]; then
+            echo "Alias '$_alias' does not exist."
+        fi
     fi
+    local _path=$(echo "$line" | cut -d: -f2)
+    cd "$_path"
 }
 
 delete_entry() {
@@ -242,11 +257,7 @@ delete_entry() {
         # Delete by line number
         local line_number=$target
         local line_count=$(wc -l < "$FILE")
-        if [ $line_number -lt 1 ]; then
-            echo "Line number '$line_number' must be greater than 0. (There are $line_count lines)."
-            return 1
-        elif [ $line_number -gt $line_count ]; then
-            echo "Line number '$line_number' is out of range. (There are $line_count lines)."
+        if ! line_nr_is_valid $line_number; then
             return 1
         fi
         sed -i "${line_number}d" "$FILE"
