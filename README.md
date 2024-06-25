@@ -16,6 +16,8 @@ TakeMeThere simplifies navigation to frequently visited directories using user-d
    ```bash
    alias tmt='source where/you/put/your/takemethere.sh'
    ```
+4. Restart your shell or `source` your `.bashrc` / `.zshrc` (for other shells, again, do something to the same extent.
+5. Call TakeMeThere with `tmt`
 
 ## Options
 
@@ -66,3 +68,7 @@ Examples:
   tmt -e                        # Edit the .takemethere file
   tmt -l                        # List current entries in .takemethere
 ```
+
+## Configuration
+
+If for whatever reason you want the `.takemethere` file to live at some other place than `~`, just update the `$FILE` variable in `takemethere.sh`
