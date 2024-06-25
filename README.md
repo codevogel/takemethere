@@ -9,15 +9,26 @@ TakeMeThere simplifies navigation to frequently visited directories using user-d
 
 ## Install
 
-1. Clone this repo or download the `takemethere.sh` script directly.
-2. Make the file executable with `sudo chmod +x where/you/put/your/takemethere.sh`
-3. Add an alias of your liking to `.bashrc` / `.zshrc` to source the script (for other shells, do something to the same extent) 
-   
+1. Clone this repo or download the `takemethere.sh` script directly. (Grab the https link if need be.)
+   ```bash
+   git clone git@github.com:codevogel/takemethere.git
+   ```
+3. Make the file executable
+   ```bash
+   sudo chmod +x where/you/put/your/takemethere.sh
+   ```
+5. Add an alias of your liking to `.bashrc` / `.zshrc` to source the script (for other shells, do something to the same extent) 
    ```bash
    alias tmt='source where/you/put/your/takemethere.sh'
    ```
-4. Restart your shell or `source` your `.bashrc` / `.zshrc` (for other shells, again, do something to the same extent.
-5. Call TakeMeThere with `tmt`
+6. Restart your shell or `source` your `.bashrc` / `.zshrc` (for other shells, again, do something to the same extent.
+   ```bash
+   source ~/.bashrc
+   ```
+8. Call TakeMeThere
+   ```bash
+   tmt
+   ```
 
 ## Options
 
