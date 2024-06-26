@@ -51,23 +51,28 @@ EOF
 print_examples() {
     cat <<EOF
 Examples:
-  tmt 3                         # Change to directory on line 3
-  tmt my_alias                  # Change to directory associated with 'my_alias'
+  tmt                         List all entries in .takemethere and then
+                              prompt to go to an entry.
+                              (Much cooler with 'fzf' installed!)
 
-  tmt -a /some/dir              # Add path '/some/dir' as the last entry.
-  tmt -a foo /some/dir          # Add alias 'foo' for path '/some/dir' as the last entry
+  tmt 3                       Change to directory on line 3
+  tmt my_alias                Change to directory associated with 'my_alias'
 
-  tmt -c 1 /some/dir            # Change line 1 so it points to path '/some/dir'
-  tmt -c 1 foo /some/dir        # Change line 1 so alias 'foo' points to path '/some/dir'
-  tmt -c foo /some/dir          # Change alias 'foo' so it points to path '/some/dir'
-  tmt -c foo bar /some/dir      # Change alias 'foo' to 'bar' and point it to '/some/dir'
+  tmt -a /some/dir            Add path '/some/dir' as the last entry.
+  tmt -a foo /some/dir        Add alias 'foo' for path '/some/dir' as
+                              the last entry
 
-  tmt -d 3                      # Delete entry on line 3
-  tmt -d foo                    # Delete entry associated with alias 'foo'
+  tmt -c 1 /some/dir          Change line 1 so it points to path '/some/dir'
+  tmt -c 1 foo /some/dir      Change line 1 so alias 'foo' points to path '/some/dir'
+  tmt -c foo /some/dir        Change alias 'foo' so it points to path '/some/dir'
+  tmt -c foo bar /some/dir    Change alias 'foo' to 'bar' and point it to '/some/dir'
 
-  tmt -e                        # Edit the .takemethere file
+  tmt -d 3                    Delete entry on line 3
+  tmt -d foo                  Delete entry associated with alias 'foo'
 
-  tmt -l                        # List current entries in .takemethere
+  tmt -e                      Edit the .takemethere file
+
+  tmt -l                      List current entries in .takemethere
 EOF
 }
 
@@ -283,11 +288,19 @@ if [ "$#" -lt 1 ]; then
         echo "To create your first entry, see 'tmt --help' and look at the --add option."
         return 1
     fi
-    list_entries
-    echo -n "Go to line number or alias: "
-    read target
-    change_to_directory "$target"
-    return 0
+
+    if which fzf >/dev/null 2>&1; then
+        local entry=$(list_entries | fzf --height 30% --reverse --ansi --prompt="Go to line number or alias: ")
+        local target=$( echo $entry | cut -d '|' -f1 | xargs)
+        change_to_directory "$target"
+        return 0
+    else
+        list_entries
+        echo -n "Go to line number or alias: "
+        read target
+        change_to_directory "$target"
+        return 0
+    fi
 elif [ "$#" -gt 4 ]; then
     echo "Usage: tmt [OPTIONS] [ARGUMENTS]"
     echo ""
