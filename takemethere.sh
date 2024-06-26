@@ -110,49 +110,43 @@ alias_is_valid() {
     return 1
 }
 
-path_is_valid() {
-    local _path=$1 # Avoid overwriting $path
-    if [ ! -d "$_path" ]; then
-        echo "Path '$_path' does not exist or is not a directory."
+# Validate and get the absolute path
+get_valid_absolute_path() {
+    local _path
+    _path=$(cd "$1" > /dev/null 2>&1 && pwd)
+    if [ -z "$_path" ]; then
+        echo "Path '$1' does not point to an existing directory." >&2
         return 1
     fi
-    return 0
+    echo "$_path"
 }
 
+# Add an entry to the file
 add_entry() {
+    local _path
     case $# in
         1)
-            local _path=$1
-            if path_is_valid $_path; then
-                if [ "$_path" = "." ]; then
-                    _path=$(pwd)
-                fi
-                echo "$_path" >> "$FILE"
-                echo "Added entry:"
-                echo "$(wc -l < "$FILE") | $_path"
-                return 0
-            fi
+            _path=$(get_valid_absolute_path "$1") || return 1
+            echo "$_path" >> "$FILE"
             ;;
         2)
             local _alias=$1
-            local _path=$2
-            if alias_is_valid $_alias && path_is_valid $_path; then
-                if [ "$_path" = "." ]; then
-                    _path=$(pwd)
-                fi
-                echo "$_alias:$_path" >> "$FILE"
-                echo "Added entry:"
-                echo "$(wc -l < "$FILE") | $_alias:$_path"
-                return 0
+            _path=$(get_valid_absolute_path "$2") || return 1
+            # Alias check has priority over path check
+            if ! alias_is_valid "$_alias"; then
+                return 1
             fi
+            echo "$_alias:$_path" >> "$FILE"
             ;;
         *)
-            echo "Invalid number of arguments."
-            echo "Usage: tmt --add|-a [<alias>] <path>"
-            echo "See 'tmt --help' for more information."
+            echo "Invalid number of arguments." >&2
+            echo "Usage: tmt --add|-a [<alias>] <path>" >&2
+            echo "See 'tmt --help' for more information." >&2
+            return 1
             ;;
     esac
-    return 1
+    echo "Added entry:"
+    echo "$(wc -l < "$FILE") | $_alias:$_path"
 }
 
 change_entry() {
@@ -183,22 +177,20 @@ change_entry() {
 }
 
 change() {
+    local _path
     local target=$1
     case $# in
         2)
-            local _path=$2
-            if path_is_valid $_path; then
-                change_entry $target $_path
-                return 0
-            fi
+            _path=$(get_valid_absolute_path "$2") || return 1
+            change_entry $target $_path
             ;;
         3)
+            _path=$(get_valid_absolute_path "$3") || return 1
             local _alias=$2
-            local _path=$3
-            if alias_is_valid $_alias && path_is_valid $_path; then
-                change_entry $target "$_alias:$_path"
-                return 0
+            if ! alias_is_valid $_alias; then
+                return 1
             fi
+            change_entry $target "$_alias:$_path"
             ;;
         *)
             echo "Invalid number of arguments."
