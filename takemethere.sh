@@ -24,75 +24,6 @@ list_entries() {
     awk -v width="${#line_count}" '{printf "%" width "d | %s\n", NR, $0}' "$FILE"
 }
 
-print_options() {
-    cat <<EOF
-Options:
-  n                   Change to the directory at line n (1-indexed).
-  alias               Change to the directory associated with 'alias'.
-  -h, --help          Display an extended help message.
-  -a, --add           Add a new path or alias:path entry to the file.
-                        -a <path>
-                        -a <alias> <path>
-  -c, --change        Change alias or directory path by alias or line.
-                        -c <alias|n> <new_alias> <new_path>
-                        -c <alias|n> <new_path>
-  -d, --delete        Delete an alias or line by alias or line number.
-                        -d <alias|n>
-  -D, --delete-all    Delete all entries in the .takemethere file.
-                      Asks for confirmation first, unless forced.
-                        -D [-f]
-  -e, --edit          Open the ~/.takemethere file with your \$EDITOR.
-                      (This is powerful for quick rearranging of entries!)
-  -l, --list          Display the current contents of the .takemethere file.
-  --examples          Display examples of how to use the script.
-EOF
-}
-
-print_examples() {
-    cat <<EOF
-Examples:
-  tmt                         List all entries in .takemethere and then
-                              prompt to go to an entry.
-                              (Much cooler with 'fzf' installed!)
-
-  tmt 3                       Change to directory on line 3
-  tmt my_alias                Change to directory associated with 'my_alias'
-
-  tmt -a /some/dir            Add path '/some/dir' as the last entry.
-  tmt -a foo /some/dir        Add alias 'foo' for path '/some/dir' as
-                              the last entry
-
-  tmt -c 1 /some/dir          Change line 1 so it points to path '/some/dir'
-  tmt -c 1 foo /some/dir      Change line 1 so alias 'foo' points to path '/some/dir'
-  tmt -c foo /some/dir        Change alias 'foo' so it points to path '/some/dir'
-  tmt -c foo bar /some/dir    Change alias 'foo' to 'bar' and point it to '/some/dir'
-
-  tmt -d 3                    Delete entry on line 3
-  tmt -d foo                  Delete entry associated with alias 'foo'
-
-  tmt -e                      Edit the .takemethere file
-
-  tmt -l                      List current entries in .takemethere
-EOF
-}
-
-print_help() {
-    cat <<EOF
-Usage: tmt [OPTIONS] [ARGUMENTS]
-
-Description: TakeMeThere simplifies navigation to frequently visited directories using
-   user-defined aliases stored in a user defined file (default: ~/.takemethere).
-   Quickly access directories by alias (tmt work) or sequential order (tmt 1, tmt 2, etc.).
-   Easily manage, reorder, and edit aliases through the CLI or using your preferred text editor.
-
-$(print_options)
-
-Note:
-  - Line numbers and aliases are 1-indexed.
-  - Use quotes around alias:path entries containing spaces.
-EOF
-}
-
 # Argument is an alias when it is not a number group
 is_digits() {
     case $1 in
@@ -271,6 +202,117 @@ delete_entry() {
         fi
     fi
 }
+
+print_options() {
+    cat <<EOF
+Options:
+  n                      Change to the directory at line n (1-indexed).
+  alias                  Change to the directory associated with 'alias'.
+  -h, --help             Display an extended help message.
+  -a, --add              Add a new path or alias:path entry to the file.
+                           -a <path>
+                           -a <alias> <path>
+  -c, --change           Change alias or directory path by alias or line.
+                           -c <alias|n> <new_alias> <new_path>
+                           -c <alias|n> <new_path>
+  -d, --delete           Delete an alias or line by alias or line number.
+                           -d <alias|n>
+  -D, --delete-all       Delete all entries in the .takemethere file.
+                         Asks for confirmation first, unless forced.
+                           -D [-f]
+  -e, --edit             Open the ~/.takemethere file with your \$EDITOR.
+                         (This is powerful for quick rearranging of entries,
+                          so you can go to directories simply by number!)
+  -l, --list             Display the current contents of the .takemethere file.
+  --examples             Display examples of how to use the script.
+EOF
+}
+
+print_examples() {
+    cat <<EOF
+Examples:
+  tmt                         List all entries in .takemethere and then
+                              prompt to go to an entry.
+                               -> Much cooler with 'fzf' installed!
+
+  tmt my_alias                Change to directory associated with 'my_alias'
+
+  tmt 3                       Change to directory listed on line 3
+                               in .takemethere
+
+  tmt -a /some/dir            Add path '/some/dir' as the last entry (n).
+                              Result:
+                               tmt n     ->    cd /some/dir
+
+  tmt -a foo /some/dir        Adds alias 'foo' for path '/some/dir' as the last
+                               entry (n).
+                              Result:
+                               tmt foo   ->    cd /some/dir
+                               tmt n     ->    cd /some/dir
+
+  tmt -c 2 /some/dir          Overwrite entry 2 so it points to '/some/dir'
+                              Result:
+                               tmt 2     ->    cd /some/dir
+
+
+  tmt -c 1 foo /some/dir      Overwrites entry 1 and stores an entry that makes
+                                alias 'foo' point to '/some/dir'
+                              Result:
+                               tmt foo   ->    cd /some/dir
+                               tmt 1     ->    cd /some/dir
+
+  tmt -c foo /some/dir        Overwrites the path of the entry associated with
+                               alias 'foo' so it now points to path '/some/dir'.
+                              This will also list the entry number that was
+                               changed (n)
+                              Result:
+                               tmt foo   ->     cd /some/dir
+                               tmt n     ->     cd /some/dir
+
+  tmt -c foo bar /some/dir    Overwrites the entry associated with alias 'foo'
+                               with an entry that makes alias 'bar' point to
+                               path '/some/dir'
+                              This will also list the entry number that was
+                               changed (n)
+                              Result:
+                                tmt bar   ->    cd /some/dir
+                                tmt n     ->    cd /some/dir
+
+  tmt -d 3                    Delete entry 3
+  tmt -d foo                  Delete entry associated with alias 'foo'
+
+  tmt -e                      Edit the .takemethere file with \$EDITOR
+
+  tmt -l                      List current entries in .takemethere
+EOF
+}
+
+print_help() {
+    cat <<EOF
+Usage: tmt [OPTIONS] [ARGUMENTS]
+
+Description:
+  TakeMeThere simplifies navigation to frequently visited directories using
+   user-defined aliases stored in a user defined file (default: ~/.takemethere).
+  Because TakeMeThere decouples your aliases from your shell environment,
+   alias conflicts later down the line are prevented.
+  It also allows you to quickly access directories by number, making it easy to
+   navigate to directories without having to remember the alias.
+
+Key Features:
+  -> Quickly access directories by alias (tmt work) or number
+  -> Easily manage, reorder, and edit aliases through the CLI or using your
+      preferred text editor.
+  -> Optional fzf integration for fuzzy find selection of your directories.
+
+$(print_options)
+
+Note:
+  - Line numbers and aliases are 1-indexed.
+  - Use quotes around alias:path entries containing spaces.
+EOF
+}
+
 
 ###########################################################################
 ############## Main script logic ##########################################
