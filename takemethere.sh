@@ -5,77 +5,60 @@ FILE="$HOME/.takemethere"
 
 # Function to edit the .takemethere file
 edit_entries() {
-    if [ -z "$EDITOR" ]; then
-        echo "EDITOR variable is not set."
-        return 1
-    fi
-    $EDITOR "$FILE"
+    ${EDITOR:-vi} "$FILE"
 }
 
 # Function to list the contents of the .takemethere file
 list_entries() {
     # Get line count of $FILE
     local line_count=$(wc -l < "$FILE")
-    if [ "$line_count" -eq 0 ]; then
-        echo "No entries found in $FILE"
-        return 1
-    fi
-    # Use awk to print lines with the appropriate padding
-    awk -v width="${#line_count}" '{printf "%" width "d | %s\n", NR, $0}' "$FILE"
+    [ "$line_count" -eq 0 ] \
+        && echo "No entries found in $FILE" \
+        && return 1
+    # Print lines with the appropriate padding
+    awk -v width="${#line_count}"  \
+        '{printf "%" width "d | %s\n", NR, $0}' "$FILE"
 }
 
 # Argument is an alias when it is not a number group
 is_digits() {
-    case $1 in
-        *[!0-9]*) return 1 ;; # Not all digits
-        *) return 0 ;; # All digits
-    esac
+    [[ $1 =~ ^[0-9]+$ ]]
 }
 
 alias_is_valid() {
     local new_alias=$1
-    if is_digits "$new_alias"; then
-        echo "Alias '$new_alias' can not only contain numbers."
-    elif echo "$new_alias" | grep -q ":" || echo "$new_alias" | grep -q "/"; then
-        echo "Alias '$new_alias' can not contain colons."
-    elif grep -q "^$new_alias:" "$FILE"; then
-        echo "Alias '$new_alias' is already used."
-    else
-        return 0
-    fi
-    return 1
+    is_digits "$new_alias" \
+        && echo "Alias '$new_alias' can not only contain numbers." \
+        && return 1
+    [[ "$new_alias" =~ [:\/] ]] \
+        && echo "Alias '$new_alias' can not contain ':' or '/'." \
+        && return 1
+    grep -q "^$new_alias:" "$FILE" \
+        && echo "Alias '$new_alias' is already used." \
+        && return 1
+    return 0
 }
-
 # Validate and get the absolute path
 get_valid_absolute_path() {
     local _path
     _path=$(cd "$1" > /dev/null 2>&1 && pwd)
-    if [ -z "$_path" ]; then
-        echo "Path '$1' does not point to an existing directory." >&2
-        return 1
-    fi
+    [ -z "$_path" ] \
+        && echo "Path '$1' does not point to an existing directory." >&2  \
+        && return 1
     echo "$_path"
 }
 
 # Add an entry to the file
 add_entry() {
-    local _path
+    local _path _alias
     case $# in
-        1)
-            _path=$(get_valid_absolute_path "$1") || return 1
-            echo "$_path" >> "$FILE"
-            ;;
-        2)
-            local _alias=$1
+        1)  _path=$(get_valid_absolute_path "$1") || return 1
+            echo "$_path" >> "$FILE" ;;
+        2)  _alias=$1
             _path=$(get_valid_absolute_path "$2") || return 1
-            # Alias check has priority over path check
-            if ! alias_is_valid "$_alias"; then
-                return 1
-            fi
-            echo "$_alias:$_path" >> "$FILE"
-            ;;
-        *)
-            echo "Invalid number of arguments." >&2
+            alias_is_valid "$_alias" || return 1
+            echo "$_alias:$_path" >> "$FILE" ;;
+        *)  echo "Invalid number of arguments." >&2
             echo "Usage: tmt --add|-a [<alias>] <path>" >&2
             echo "See 'tmt --help' for more information." >&2
             return 1
@@ -86,54 +69,38 @@ add_entry() {
 }
 
 change_entry() {
-    local target=$1
-    local new_entry=$2
-
+    local target=$1 new_entry=$2 line_number
     if is_digits "$target"; then
-        # Change by line number
-        local line_number=$target
-        local line_count=$(wc -l < "$FILE")
-        if [ $line_number -lt 0 -o $line_number -gt $line_count ]; then
-            echo "Line number '$line_number' does not exist."
-            return 1
-        fi
+        line_number=$target
+        # Validate line number (1-indexed and within range)
+        (( line_number < 1 || line_number > $(wc -l < "$FILE"))) \
+            && echo "Line number '$line_number' does not exist." \
+            && return 1
     else
-        # Get line number of alias
-        local line_number=$(grep -n "^$target:" "$FILE" | cut -d: -f1)
-        if [ -z "$line_number" ]; then
-            echo "Alias '$target' does not exist."
-            return 1
-        fi
-        local new_entry="$target:$new_entry"
+        line_number=$(grep -n "^$target:" "$FILE" | cut -d: -f1)
+        [ -z "$line_number" ] \
+            && echo "Alias '$target' does not exist." \
+            &&  return 1
+        new_entry="$target:$new_entry"
     fi
-
     sed -i "${line_number}s|.*|$new_entry|" "$FILE"
     echo "Entry updated:"
     echo "$line_number | $new_entry"
 }
 
 change() {
-    local _path
-    local target=$1
+    local target=$1 _path _alias
     case $# in
-        2)
-            _path=$(get_valid_absolute_path "$2") || return 1
-            change_entry $target $_path
-            ;;
-        3)
+        2) _path=$(get_valid_absolute_path "$2") || return 1
+            change_entry "$target" "$_path" ;;
+        3) _alias=$2
             _path=$(get_valid_absolute_path "$3") || return 1
-            local _alias=$2
-            if ! alias_is_valid $_alias; then
-                return 1
-            fi
-            change_entry $target "$_alias:$_path"
-            ;;
-        *)
-            echo "Invalid number of arguments."
+            alias_is_valid "$_alias" || return 1
+            change_entry "$target" "$_alias:$_path" ;;
+        *) echo "Invalid number of arguments."
             echo "Usage: tmt --change|-c <alias|n> [<new_alias>] <new_path>"
             echo "See 'tmt --help' for more information."
-            return 1
-            ;;
+            return 1 ;;
     esac
 }
 
@@ -144,63 +111,44 @@ delete_all_entries() {
         read confirm
         [[ ! "$confirm" =~ ^[yY]$ ]] && echo "Aborted." && return 1
     fi
-    rm "$FILE"
-    echo "Deleted $FILE"
-    return 0
+    rm "$FILE" && echo "Deleted $FILE"
 }
 
 line_nr_is_valid() {
-    if [ $line_number -lt 1 ]; then
-        echo "Line number '$line_number' must be greater than 0. (There are $line_count lines)."
-        return 1
-    elif [ $line_number -gt $line_count ]; then
-        echo "Line number '$line_number' is out of range. (There are $line_count lines)."
-        return 1
-    fi
+    [ $line_number -lt 1 ] \
+        && echo "Line number '$line_number' must be greater than 0. " \
+        "(There are $line_count lines)." \
+        && return 1
+    [ $line_number -gt $line_count ] \
+        && echo "Line number '$line_number' is out of range." \
+        "(There are $line_count lines)." \
+        && return 1
 }
 
 change_to_directory() {
-    local target=$1
-    # cd to the directory
-    if is_digits "$target"; then
-        local line_number=$target
-        local line_count=$(wc -l < "$FILE")
-        if ! line_nr_is_valid $line_number; then
-            return 1
-        fi
-        local line=$(sed -n "${line_number}p" "$FILE")
+    [ "$(wc -l < "$FILE")" -eq 0 ] \
+        && echo "No entries found in $FILE" \
+        && return 1
+    local alias_or_num=$1 dir
+    if is_digits "$alias_or_num"; then
+        dir=$(sed -n "${alias_or_num}p" "$FILE")
     else
-        local _alias=$target
-        local line=$(grep "^$_alias:" "$FILE")
-        if [ -z "$line" ]; then
-            echo "Alias '$_alias' does not exist."
-        fi
+        dir=$(grep "^$alias_or_num:" "$FILE" | cut -d: -f2-)
     fi
-    local _path=$(echo "$line" | cut -d: -f2)
-    cd "$_path"
+    [ -z "$dir" ] && echo "'$alias_or_num' is not a valid entry." && return 1
+    cd "$dir" || return 1
 }
 
 delete_entry() {
-    local target=$1
-    if is_digits "$target"; then
-        # Delete by line number
-        local line_number=$target
-        local line_count=$(wc -l < "$FILE")
-        if ! line_nr_is_valid $line_number; then
-            return 1
-        fi
-        sed -i "${line_number}d" "$FILE"
-        echo "Deleted line '$line_number'"
-    else
-        # Delete by alias
-        if grep -q "^$target:" "$FILE"; then
-            sed -i "/^$target:/d" "$FILE"
-            echo "Deleted alias '$target'"
-        else
-            echo "Not removing alias '$target' because it does not exist."
-            return 1
-        fi
-    fi
+    delete_entry() {
+        [ "$(wc -l < "$FILE")" -eq 0 ] \
+            && echo "No entries found in $FILE" \
+            && return 1
+        local alias_or_num=$1
+        is_digits "$alias_or_num" \
+            && sed -i "${alias_or_num}d" "$FILE" \
+            || sed -i "/^$alias_or_num:/d" "$FILE"
+    }
 }
 
 print_options() {
@@ -327,12 +275,15 @@ fi
 if [ "$#" -lt 1 ]; then
     if [ "$(wc -l < "$FILE")" -eq 0 ]; then
         echo "No entries found in $FILE"
-        echo "To create your first entry, see 'tmt --help' and look at the --add option."
+        echo "To create your first entry, see 'tmt --help' and look at " \
+            "the --add option."
         return 1
     fi
 
-    if which fzf >/dev/null 2>&1; then
-        local entry=$(list_entries | fzf --height 30% --reverse --ansi --prompt="Go to line number or alias: ")
+    if command fzf >/dev/null 2>&1; then
+        local entry= \
+            $(list_entries | fzf --height 30% --reverse --ansi \
+            --prompt="Go to line number or alias: ")
         local target=$( echo $entry | cut -d '|' -f1 | xargs)
         change_to_directory "$target"
         return 0
@@ -354,39 +305,21 @@ local option=$1
 local args=("${@:2}")
 
 case "$option" in
-    --help|-h)
-        print_help
-        ;;
-    --add|-a)
-        add_entry $args
-        ;;
-    --change|-c)
-        change $args
-        ;;
-    --delete|-d)
-        delete_entry $args
-        ;;
-    --delete-all|-D)
-        delete_all_entries $args
-        ;;
-    --edit|-e)
-        edit_entries
-        ;;
-    --list|-l)
-        list_entries
-        ;;
-    --examples)
-        print_examples
-        ;;
-    *)
-        if [ "$#" -ne 1 ]; then
+    --help|-h) print_help ;;
+    --add|-a) add_entry $args ;;
+    --change|-c) change $args ;;
+    --delete|-d) delete_entry $args ;;
+    --delete-all|-D) delete_all_entries $args ;;
+    --edit|-e) edit_entries ;;
+    --list|-l) list_entries ;;
+    --examples) print_examples ;;
+    *)  if [ "$#" -ne 1 ]; then
             echo "$1 is not a valid option. "
             echo "Usage: tmt [n|alias]"
             echo "See 'tmt --help' for more information."
             return 1
         fi
         # Option was actually an argument
-        change_to_directory "$option"
-        ;;
+        change_to_directory "$option" ;;
 esac
 
