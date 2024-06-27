@@ -379,13 +379,13 @@ case "$option" in
         print_examples
         ;;
     *)
-        # Option was actually an argument
         if [ "$#" -ne 1 ]; then
             echo "$1 is not a valid option. "
             echo "Usage: tmt [n|alias]"
             echo "See 'tmt --help' for more information."
             return 1
         fi
+        # Option was actually an argument
         change_to_directory "$option"
         ;;
 esac
