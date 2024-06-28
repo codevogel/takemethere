@@ -131,12 +131,16 @@ change_to_directory() {
         && return 1
     local alias_or_num=$1 dir
     if is_digits "$alias_or_num"; then
-        dir=$(sed -n "${alias_or_num}p" "$FILE")
+        dir=$(sed -n "${alias_or_num}p" "$FILE" | cut -d: -f2-)
     else
         dir=$(grep "^$alias_or_num:" "$FILE" | cut -d: -f2-)
     fi
-    [ -z "$dir" ] && echo "'$alias_or_num' is not a valid entry." && return 1
-    cd "$dir" || return 1
+    if [ -d "$dir" ]; then
+        cd "$dir"
+    else
+        echo "Alias or line number '$alias_or_num' points to path '$dir', which does not exist."
+        return 1
+    fi
 }
 
 delete_entry() {
