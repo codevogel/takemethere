@@ -132,8 +132,15 @@ change_to_directory() {
     local alias_or_num=$1 dir
     if is_digits "$alias_or_num"; then
         dir=$(sed -n "${alias_or_num}p" "$FILE" | cut -d: -f2-)
+        [ -z "$dir" ] \
+            && echo "Entry '$alias_or_num' is out of range!" \
+            && echo "Hint: There are currently only $(wc -l < "$FILE") entries. Use 'tmt -l' to list them all." \
+            && return 1
     else
         dir=$(grep "^$alias_or_num:" "$FILE" | cut -d: -f2-)
+        [ -z "$dir" ] \
+            && echo "Alias '$alias_or_num' does not exist." \
+            && return 1
     fi
     if [ -d "$dir" ]; then
         cd "$dir"
@@ -284,7 +291,7 @@ if [ "$#" -lt 1 ]; then
         return 1
     fi
 
-    if $(which fzf >/dev/null 2>&1); then
+    if $(which fzzf >/dev/null 2>&1); then
         local entry=$(list_entries | fzf --height 30% --reverse --ansi \
             --prompt="Go to line number or alias: ")
         local target=$( echo $entry | cut -d '|' -f1 | xargs)
