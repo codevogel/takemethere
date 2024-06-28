@@ -65,7 +65,7 @@ add_entry() {
             ;;
     esac
     echo "Added entry:"
-    echo "$(wc -l < "$FILE") | $_alias:$_path"
+    echo "$(wc -l < "$FILE") | $(tail -n 1 "$FILE")"
 }
 
 change_entry() {
