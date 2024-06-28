@@ -284,9 +284,8 @@ if [ "$#" -lt 1 ]; then
         return 1
     fi
 
-    if command fzf >/dev/null 2>&1; then
-        local entry= \
-            $(list_entries | fzf --height 30% --reverse --ansi \
+    if $(which fzf >/dev/null 2>&1); then
+        local entry=$(list_entries | fzf --height 30% --reverse --ansi \
             --prompt="Go to line number or alias: ")
         local target=$( echo $entry | cut -d '|' -f1 | xargs)
         change_to_directory "$target"
