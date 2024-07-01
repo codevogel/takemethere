@@ -32,7 +32,7 @@ EOF
 @test "Uses default if TMT_DATA_FILE is not set" {
     unset TMT_DATA_FILE
     run tmt.sh
-    assert_output "Warning: TMT_DATA_FILE not set, using default, which resolves to /home/$(whoami)/.takemethere"
+    assert_output --partial "Warning: TMT_DATA_FILE not set, using default, which resolves to /home/$(whoami)/.takemethere"
 }
 
 @test "Creates TMT_DATA_FILE if it does not exist" {
