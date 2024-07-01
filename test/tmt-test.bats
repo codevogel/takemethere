@@ -14,3 +14,14 @@ setup() {
     run tmt.sh
 }
 
+@test "Creates TMT_DATA_FILE if it doesn't exist" {
+    export TMT_DATA_FILE="/tmp/tmt-test-data"
+    refute [ -f "$TMT_DATA_FILE" ]
+    run tmt.sh
+    assert [ -e "$TMT_DATA_FILE" ]
+    assert_output "Creating data file at $TMT_DATA_FILE"
+}
+
+teardown() {
+    rm -f "/tmp/tmt-test-data"
+}
