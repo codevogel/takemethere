@@ -33,6 +33,7 @@ EOF
     unset TMT_DATA_FILE
     run tmt.sh
     assert_output --partial "Warning: TMT_DATA_FILE not set, using default, which resolves to /home/$(whoami)/.takemethere"
+    assert_output --partial "To suppress this warning, export TMT_DATA_FILE in your shell profile."
 }
 
 @test "Creates TMT_DATA_FILE if it does not exist" {
