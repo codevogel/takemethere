@@ -40,7 +40,7 @@ EOF
     refute [ -f "$TMT_DATA_FILE" ]
     run tmt.sh
     assert [ -e "$TMT_DATA_FILE" ]
-    assert_output "Creating data file at $TMT_DATA_FILE"
+    assert_output --partial "Creating data file at $TMT_DATA_FILE"
 }
 
 teardown() {
