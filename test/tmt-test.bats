@@ -2,6 +2,21 @@ setup() {
     load 'test_helper/bats-support/load'
     load 'test_helper/bats-assert/load'
 
+    export TMT_DATA_FILE=$(mktemp)
+    cat <<EOF > $TMT_DATA_FILE
+/tmp/tmt-test/foo
+bar:/tmp/tmt-test/bar
+baz:/tmp/tmt-test/baz
+glorp
+glarp:glorp
+EOF
+
+    # Create test directories that should exist and verify that the others do not
+    mkdir -p /tmp/tmt-test/foo
+    mkdir -p /tmp/tmt-test/bar
+    mkdir -p /tmp/tmt-test/baz
+    refute [ -e glorp ]
+
     # get the containing directory of this file
     # use $BATS_TEST_FILENAME instead of ${BASH_SOURCE[0]} or $0,
     # as those will point to the bats executable's location or the preprocessed file respectively
@@ -21,7 +36,7 @@ setup() {
 }
 
 @test "Creates TMT_DATA_FILE if it does not exist" {
-    export TMT_DATA_FILE="/tmp/tmt-test-data-that-should-not-exist"
+    export TMT_DATA_FILE="/tmp/tmt-test/data-that-should-not-exist"
     refute [ -f "$TMT_DATA_FILE" ]
     run tmt.sh
     assert [ -e "$TMT_DATA_FILE" ]
@@ -29,5 +44,5 @@ setup() {
 }
 
 teardown() {
-    rm -f "/tmp/tmt-test-data-that-should-not-exist"
+    rm -rf /tmp/tmt-test
 }
