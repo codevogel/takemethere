@@ -14,8 +14,14 @@ setup() {
     run tmt.sh
 }
 
-@test "Creates TMT_DATA_FILE if it doesn't exist" {
-    export TMT_DATA_FILE="/tmp/tmt-test-data"
+@test "Uses default if TMT_DATA_FILE is not set" {
+    unset TMT_DATA_FILE
+    run tmt.sh
+    assert_output "Warning: TMT_DATA_FILE not set, using default, which resolves to /home/$(whoami)/.takemethere"
+}
+
+@test "Creates TMT_DATA_FILE if it does not exist" {
+    export TMT_DATA_FILE="/tmp/tmt-test-data-that-should-not-exist"
     refute [ -f "$TMT_DATA_FILE" ]
     run tmt.sh
     assert [ -e "$TMT_DATA_FILE" ]
@@ -23,5 +29,5 @@ setup() {
 }
 
 teardown() {
-    rm -f "/tmp/tmt-test-data"
+    rm -f "/tmp/tmt-test-data-that-should-not-exist"
 }
