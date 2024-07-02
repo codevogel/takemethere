@@ -1,0 +1,24 @@
+name: tmt
+help: Sample application
+version: 0.1.0
+
+environment_variables:
+- name: tmt_data_file
+  help: Set the path to the data file
+  default: ~/.takemethere
+
+commands:
+- name: add
+  alias: a
+  help: Add a new path
+
+  args: 
+  - name: alias
+    help: Alias for the path
+  - name: path
+    default: "ALIAS_IS_PATH"
+    help: Target directory
+
+  examples:
+  - tmt add /path/to/mydir
+  - tmt add mydir /path/to/mydir
