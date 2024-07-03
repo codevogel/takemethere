@@ -15,7 +15,7 @@ commands:
 - name: pick
   alias: p
   help: Pick a path
-  default: true
+  default: force
  
 - name: add
   alias: a

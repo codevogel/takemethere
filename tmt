@@ -258,7 +258,7 @@ tmt_list_command() {
 # :command.function
 tmt_pick_command() {
   # src/pick_command.sh
-  cat tmt --list | fzf
+  tmt list | fzf
 
 }
 
@@ -327,11 +327,6 @@ parse_requirements() {
       ;;
 
     # :command.command_fallback
-    "")
-      tmt_usage >&2
-      exit 1
-      ;;
-
     *)
       action="pick"
       tmt_pick_parse_requirements "$@"

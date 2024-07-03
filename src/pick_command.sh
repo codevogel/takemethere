@@ -1,1 +1,1 @@
-cat tmt --list | fzf
+tmt list | fzf
