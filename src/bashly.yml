@@ -5,7 +5,7 @@ version: 0.1.0
 environment_variables:
 - name: tmt_data_file
   help: Set the path to the data file
-  default: ~/.takemethere
+  default: $HOME/.takemethere
 
 commands:
 - name: add
