@@ -16,6 +16,9 @@ commands:
   alias: p
   help: Pick a path
   default: force
+  flags:
+  - long: --no-fzf
+    help: Do not use fzf for selection
  
 - name: add
   alias: a
