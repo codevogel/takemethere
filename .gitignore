@@ -1,0 +1,6 @@
+# Ignore the generated script, to avoid committing changes to tmt while working 
+# on features. The production script is in the /release directory.
+# When releasing a new feature, overwrite it with the last generated version.
+#  e.g. 
+#  cp -i ./tmt ./release/tmt
+tmt
