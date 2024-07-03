@@ -8,6 +8,10 @@ environment_variables:
   default: $HOME/.takemethere
 
 commands:
+- name: list
+  alias: l
+  help: List all entries
+
 - name: add
   alias: a
   help: Add a new path
