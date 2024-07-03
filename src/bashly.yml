@@ -12,6 +12,11 @@ commands:
   alias: l
   help: List all entries
 
+- name: pick
+  alias: p
+  help: Pick a path
+  default: true
+ 
 - name: add
   alias: a
   help: Add a new path

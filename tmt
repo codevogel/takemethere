@@ -34,7 +34,9 @@ tmt_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "Commands:"
-  printf "  %s   Add a new path\n" "add"
+  printf "  %s   List all entries\n" "list"
+  printf "  %s   Pick a path (default)\n" "pick"
+  printf "  %s   Add a new path\n" "add "
   echo
 
   # :command.long_usage
@@ -55,7 +57,71 @@ tmt_usage() {
     # :environment_variable.usage
     printf "  %s\n" "TMT_DATA_FILE"
     printf "    Set the path to the data file\n"
-    printf "    Default: ~/.takemethere\n"
+    printf "    Default: $HOME/.takemethere\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+tmt_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "tmt list - List all entries\n"
+    echo
+
+  else
+    printf "tmt list - List all entries\n"
+    echo
+
+  fi
+
+  printf "Alias: l\n"
+  echo
+
+  printf "%s\n" "Usage:"
+  printf "  tmt list\n"
+  printf "  tmt list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+tmt_pick_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "tmt pick - Pick a path\n"
+    echo
+
+  else
+    printf "tmt pick - Pick a path\n"
+    echo
+
+  fi
+
+  printf "Alias: p\n"
+  echo
+
+  printf "%s\n" "Usage:"
+  printf "  tmt pick\n"
+  printf "  tmt pick --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "Options:"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "--help, -h"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -180,6 +246,23 @@ inspect_args() {
 
 # :command.command_functions
 # :command.function
+tmt_list_command() {
+  # src/list_command.sh
+  # print file $TMT_DATA_FILE in format:
+  # line number | line content
+
+  cat $TMT_DATA_FILE | awk '{print NR "| " $0}'
+
+}
+
+# :command.function
+tmt_pick_command() {
+  # src/pick_command.sh
+  cat tmt --list | fzf
+
+}
+
+# :command.function
 tmt_add_command() {
   # src/add_command.sh
   echo "alias: ${args[alias]}"
@@ -212,7 +295,7 @@ parse_requirements() {
 
   # :command.environment_variables_filter
   # :command.environment_variables_default
-  export TMT_DATA_FILE="${TMT_DATA_FILE:-~/.takemethere}"
+  export TMT_DATA_FILE="${TMT_DATA_FILE:-$HOME/.takemethere}"
 
   env_var_names+=("TMT_DATA_FILE")
 
@@ -221,6 +304,20 @@ parse_requirements() {
 
   case $action in
     -*) ;;
+
+    list | l)
+      action="list"
+      shift
+      tmt_list_parse_requirements "$@"
+      shift $#
+      ;;
+
+    pick | p)
+      action="pick"
+      shift
+      tmt_pick_parse_requirements "$@"
+      shift $#
+      ;;
 
     add | a)
       action="add"
@@ -236,11 +333,100 @@ parse_requirements() {
       ;;
 
     *)
-      printf "invalid command: %s\n" "$action" >&2
-      exit 1
+      action="pick"
+      tmt_pick_parse_requirements "$@"
+      shift $#
       ;;
 
   esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+tmt_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        tmt_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+tmt_pick_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        tmt_pick_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="pick"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -329,7 +515,7 @@ initialize() {
   set -e
 
   # :command.environment_variables_default
-  export TMT_DATA_FILE="${TMT_DATA_FILE:-~/.takemethere}"
+  export TMT_DATA_FILE="${TMT_DATA_FILE:-$HOME/.takemethere}"
 
 }
 
@@ -344,6 +530,8 @@ run() {
   parse_requirements "${input[@]}"
 
   case "$action" in
+    "list") tmt_list_command ;;
+    "pick") tmt_pick_command ;;
     "add") tmt_add_command ;;
   esac
 }
